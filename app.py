@@ -1022,7 +1022,7 @@ DOCUMENTS = [
 def setup_rag():
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
     embeddings = SentenceTransformerEmbeddings(
-        model_name="paraphrase-multilingual-MiniLM-L6-v2"
+        model_name="all-MiniLM-L6-v2"
     )
     langchain_docs = []
     for doc in DOCUMENTS:
