@@ -1110,8 +1110,6 @@ with st.sidebar:
 # ============================================================
 # LOAD VECTOR STORE (cached after first load)
 # ============================================================
-with st.spinner("Loading knowledge base..."):
-    vectorstore = setup_rag()
 
 
 # ============================================================
@@ -1748,6 +1746,7 @@ def _expand_query(q: str) -> str:
 
 
 def show_search():
+    vectorstore = setup_rag()
     st.markdown('<h2 class="section-header">Search / Iskanje</h2>', unsafe_allow_html=True)
 
     st.markdown("""
