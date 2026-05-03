@@ -1017,35 +1017,35 @@ DOCUMENTS = [
 # ============================================================
 @st.cache_resource
 def setup_rag():
-    from langchain_text_splitters import RecursiveCharacterTextSplitter
-    from langchain_community.vectorstores import Chroma
-    from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
-
-    class OnnxEmbeddings:
-        def __init__(self):
-            self._fn = DefaultEmbeddingFunction()
-        def embed_documents(self, texts):
-            return [list(v) for v in self._fn(texts)]
-        def embed_query(self, text):
-            return list(self._fn([text])[0])
+    import chromadb
+    import numpy as np
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity as cos_sim
 
     persist_dir = os.path.join(os.path.dirname(__file__), "chroma_db")
-    embeddings = OnnxEmbeddings()
-    if os.path.exists(persist_dir) and os.listdir(persist_dir):
-        return Chroma(persist_directory=persist_dir, embedding_function=embeddings)
-    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
-    langchain_docs = []
-    for doc in DOCUMENTS:
-        for chunk in splitter.split_text(doc["content"]):
-            langchain_docs.append(Document(
-                page_content=chunk,
-                metadata={
-                    "title": doc["title"],
-                    "language": doc["language"],
-                    "category": doc["category"],
-                }
-            ))
-    return Chroma.from_documents(langchain_docs, embeddings, persist_directory=persist_dir)
+    client = chromadb.PersistentClient(path=persist_dir)
+    collection = client.get_collection("langchain")
+    data = collection.get(include=["documents", "metadatas"])
+    texts = data["documents"]
+    metas = data["metadatas"]
+
+    vectorizer = TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True)
+    matrix = vectorizer.fit_transform(texts)
+
+    class TfidfStore:
+        def _search(self, query, k):
+            q = vectorizer.transform([query])
+            sims = cos_sim(q, matrix).flatten()
+            idx = np.argsort(sims)[::-1][:k]
+            return [(Document(page_content=texts[i], metadata=metas[i]), float(sims[i])) for i in idx]
+
+        def similarity_search_with_relevance_scores(self, query, k=5):
+            return self._search(query, k)
+
+        def similarity_search(self, query, k=5):
+            return [d for d, _ in self._search(query, k)]
+
+    return TfidfStore()
 
 
 # ============================================================
