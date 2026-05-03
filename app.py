@@ -347,7 +347,7 @@ h1, h2, h3, h4 {
 p, li {
     color: #2D2D2D;
     line-height: 1.9;
-    font-size: 30px !important;
+    font-size: 18px !important;
     text-align: justify !important;
 }
 /* Sidebar button text — declared after global p rule so order+specificity both win */
