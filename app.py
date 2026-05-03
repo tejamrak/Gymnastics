@@ -1019,9 +1019,18 @@ DOCUMENTS = [
 def setup_rag():
     from langchain_text_splitters import RecursiveCharacterTextSplitter
     from langchain_community.vectorstores import Chroma
-    from langchain_community.embeddings import SentenceTransformerEmbeddings
+    from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+
+    class OnnxEmbeddings:
+        def __init__(self):
+            self._fn = DefaultEmbeddingFunction()
+        def embed_documents(self, texts):
+            return [list(v) for v in self._fn(texts)]
+        def embed_query(self, text):
+            return list(self._fn([text])[0])
+
     persist_dir = os.path.join(os.path.dirname(__file__), "chroma_db")
-    embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    embeddings = OnnxEmbeddings()
     if os.path.exists(persist_dir) and os.listdir(persist_dir):
         return Chroma(persist_directory=persist_dir, embedding_function=embeddings)
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)

@@ -1,8 +1,17 @@
 import os
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_core.documents import Document
+from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+
+
+class OnnxEmbeddings:
+    def __init__(self):
+        self._fn = DefaultEmbeddingFunction()
+    def embed_documents(self, texts):
+        return [list(v) for v in self._fn(texts)]
+    def embed_query(self, text):
+        return list(self._fn([text])[0])
 
 DOCUMENTS = [
     {"id": 1, "title": "What is Gymnastics?", "language": "en", "category": "Foundations", "content": ("WHAT IS GYMNASTICS?\n\nGymnastics is a sport that combines strength, flexibility, balance, coordination, and movement technique across a range of disciplines and apparatus.\n\nIts origins trace back to ancient Greece, where gymnastic exercises were part of physical and military education. The modern sport took shape in 19th-century Europe, largely through the work of Friedrich Ludwig Jahn in Germany, widely regarded as the father of gymnastics. Gymnastics was included in the first modern Olympic Games in Athens in 1896 and has been part of every Summer Olympics since.\n\nThe sport is governed internationally by the Federation Internationale de Gymnastique (FIG), founded in 1881 and headquartered in Lausanne, Switzerland. FIG establishes the competition rules through the Code of Points, organizes the World Championships, and oversees the Olympic gymnastics program. The organization has member federations in over 140 countries.\n\nAthletes typically begin training in early childhood and progress through national competition systems toward international competition. The highest level of competition is the Olympic Games.")},
@@ -30,7 +39,7 @@ def main():
     print("Building ChromaDB index...")
     persist_dir = os.path.join(os.path.dirname(__file__), "chroma_db")
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
-    embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    embeddings = OnnxEmbeddings()
     langchain_docs = []
     for doc in DOCUMENTS:
         for chunk in splitter.split_text(doc["content"]):
