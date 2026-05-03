@@ -1020,10 +1020,11 @@ DOCUMENTS = [
 # ============================================================
 @st.cache_resource
 def setup_rag():
+    persist_dir = os.path.join(os.path.dirname(__file__), "chroma_db")
+    embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    if os.path.exists(persist_dir) and os.listdir(persist_dir):
+        return Chroma(persist_directory=persist_dir, embedding_function=embeddings)
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
-    embeddings = SentenceTransformerEmbeddings(
-        model_name="all-MiniLM-L6-v2"
-    )
     langchain_docs = []
     for doc in DOCUMENTS:
         for chunk in splitter.split_text(doc["content"]):
@@ -1035,7 +1036,7 @@ def setup_rag():
                     "category": doc["category"],
                 }
             ))
-    return Chroma.from_documents(langchain_docs, embeddings)
+    return Chroma.from_documents(langchain_docs, embeddings, persist_directory=persist_dir)
 
 
 # ============================================================
