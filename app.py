@@ -1,8 +1,5 @@
 import streamlit as st
 import base64, os
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_core.documents import Document
 
 def _logo_b64():
@@ -1020,6 +1017,9 @@ DOCUMENTS = [
 # ============================================================
 @st.cache_resource
 def setup_rag():
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    from langchain_community.vectorstores import Chroma
+    from langchain_community.embeddings import SentenceTransformerEmbeddings
     persist_dir = os.path.join(os.path.dirname(__file__), "chroma_db")
     embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
     if os.path.exists(persist_dir) and os.listdir(persist_dir):
